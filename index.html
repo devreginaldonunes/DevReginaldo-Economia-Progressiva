@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economia Progressiva</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h1>Economia Progressiva</h1>
+            <p>Transforme pequenos hábitos em grandes conquistas financeiras</p>
+        </div>
+
+        <!-- Setup Section -->
+        <div id="setupSection">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <h2 class="card-title">Configure sua Meta</h2>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="goalAmount">
+                            <i class="fas fa-dollar-sign"></i> Valor Total
+                        </label>
+                        <input type="number" id="goalAmount" class="form-input" placeholder="1200.00" min="1"
+                            step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="duration">
+                            <i class="fas fa-calendar-alt"></i> Duração (meses)
+                        </label>
+                        <input type="number" id="duration" class="form-input" placeholder="12" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">
+                            <i class="fas fa-play"></i> Data de Início
+                        </label>
+                        <input type="date" id="startDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="goalName">
+                            <i class="fas fa-bookmark"></i> Nome da Meta
+                        </label>
+                        <input type="text" id="goalName" class="form-input" placeholder="Ex: Viagem dos sonhos">
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <div class="quick-action" onclick="setQuickGoal(500, 6)">
+                        <i class="fas fa-bolt"></i>
+                        <div>Meta Rápida</div>
+                        <small>R$ 500 em 6 meses</small>
+                    </div>
+                    <div class="quick-action" onclick="setQuickGoal(1200, 12)">
+                        <i class="fas fa-star"></i>
+                        <div>Meta Popular</div>
+                        <small>R$ 1.200 em 12 meses</small>
+                    </div>
+                    <div class="quick-action" onclick="setQuickGoal(2400, 18)">
+                        <i class="fas fa-crown"></i>
+                        <div>Meta Ambiciosa</div>
+                        <small>R$ 2.400 em 18 meses</small>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="setupGoal()">
+                    <i class="fas fa-rocket"></i>
+                    Iniciar Jornada
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="progress-section">
+            <!-- Hero Stats -->
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSaved">R$ 0</div>
+                    <div class="stat-label">Total Economizado</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="progressPercentage">0%</div>
+                    <div class="stat-label">Progresso Concluído</div>
+                    <div id="goalDisplay" style="font-size: 1rem; color: var(--tertiary); margin-top: 0.5rem;">de R$ 0
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedMonths">0</div>
+                    <div class="stat-label">Meses Concluídos</div>
+                    <div id="remainingMonths" style="font-size: 1rem; color: var(--tertiary); margin-top: 0.5rem;">de 0
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="averageMonthly">R$ 0</div>
+                    <div class="stat-label">Média Mensal</div>
+                    <div id="streakCounter" style="font-size: 1rem; color: var(--tertiary); margin-top: 0.5rem;">
+                        Sequência: 0</div>
+                </div>
+            </div>
+
+            <!-- Current Month -->
+            <div class="current-month" id="currentMonth">
+                <h3><i class="fas fa-calendar-check"></i> Este Mês</h3>
+                <div class="current-amount" id="currentAmount">R$ 0</div>
+                <p id="currentMonthName">Valor a economizar</p>
+                <button class="btn" onclick="markMonthCompleted()" id="markCompleteBtn"
+                    style="background: rgba(255,255,255,0.2); margin-top: 1rem;">
+                    <i class="fas fa-check"></i>
+                    Marcar como Concluído
+                </button>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+                        <h3 class="card-title">Cronograma</h3>
+                    </div>
+                    <div class="timeline" id="timeline"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h3 class="card-title">Conquistas</h3>
+                    </div>
+                    <div class="achievements" id="achievements"></div>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insight-card">
+                <div class="insight-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Insights Financeiros
+                </div>
+                <div class="insight-text" id="insightText">
+                    Complete mais alguns meses para receber insights personalizados sobre seu progresso.
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-bar">
+                <button class="btn btn-secondary" onclick="editGoal()">
+                    <i class="fas fa-edit"></i>
+                    Editar Meta
+                </button>
+                <button class="btn btn-secondary" onclick="viewAnalytics()">
+                    <i class="fas fa-chart-bar"></i>
+                    Análises
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    <i class="fas fa-download"></i>
+                    Exportar
+                </button>
+                <button class="btn btn-secondary" onclick="shareProgress()">
+                    <i class="fas fa-share"></i>
+                    Compartilhar
+                </button>
+                <button class="btn btn-danger" onclick="resetGoal()">
+                    <i class="fas fa-redo"></i>
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="floating-btn hidden" id="floatingBtn" onclick="quickAddSaving()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Editar Meta
+                </h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="newGoalAmount">Nova Meta (R$)</label>
+                    <input type="number" id="newGoalAmount" class="form-input" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newDuration">Nova Duração (meses)</label>
+                    <input type="number" id="newDuration" class="form-input" min="1" max="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newGoalName">Nome da Meta</label>
+                    <input type="text" id="newGoalName" class="form-input">
+                </div>
+            </div>
+            <button class="btn" onclick="updateGoal()">
+                <i class="fas fa-save"></i>
+                Salvar Alterações
+            </button>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analyticsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-chart-bar"></i>
+                    Análises Detalhadas
+                </h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="analyticsContent"></div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Sucesso!</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
