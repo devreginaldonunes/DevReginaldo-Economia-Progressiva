@@ -383,45 +383,116 @@ let goalData = {};
             }
         }
 
-        function exportData() {
-            const totalSaved = completedMonths.reduce((sum, month) => sum + goalData.monthlyAmounts[month], 0);
-            const progressPercentage = (totalSaved / goalData.totalGoal) * 100;
+      function exportData() {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        showNotification("Erro: jsPDF não foi carregado!", "error");
+        return;
+    }
 
-            const reportData = {
-                meta: {
-                    nome: goalData.name,
-                    valorTotal: goalData.totalGoal,
-                    duracao: goalData.duration,
-                    dataInicio: goalData.startDate.toISOString().split('T')[0],
-                    criadoEm: goalData.createdAt
-                },
-                progresso: {
-                    totalEconomizado: totalSaved,
-                    porcentagem: Math.round(progressPercentage),
-                    mesesConcluidos: completedMonths.length,
-                    sequencia: streak,
-                    mediaMensal: completedMonths.length > 0 ? totalSaved / completedMonths.length : 0
-                },
-                cronograma: goalData.monthlyAmounts.map((amount, index) => ({
-                    mes: index + 1,
-                    valor: amount,
-                    concluido: completedMonths.includes(index),
-                    data: new Date(goalData.startDate.getFullYear(), goalData.startDate.getMonth() + index).toISOString().split('T')[0]
-                })),
-                relatorioGerado: new Date().toISOString()
-            };
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-            const jsonString = JSON.stringify(reportData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `economia_progressiva_${goalData.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+    const totalSaved = completedMonths.reduce((sum, m) => sum + goalData.monthlyAmounts[m], 0);
+    const progressPercentage = (totalSaved / goalData.totalGoal) * 100;
+    const avgMonthly = completedMonths.length > 0 ? totalSaved / completedMonths.length : 0;
+    const startDate = new Date(goalData.startDate);
 
-            showNotification('Dados exportados com sucesso!', 'success');
+    // CAPA
+    doc.setFillColor(41, 128, 185);
+    doc.rect(0, 0, 210, 297, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text("Relatório de Economia Progressiva", 105, 80, { align: "center" });
+    doc.setFontSize(14);
+    doc.text(`Meta: ${goalData.name}`, 105, 100, { align: "center" });
+    doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")}`, 105, 110, { align: "center" });
+
+    doc.addPage();
+
+    // CARDS
+    function drawCard(x, y, w, h, color, title, value) {
+        doc.setFillColor(...color);
+        doc.roundedRect(x, y, w, h, 3, 3, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text(title, x + 5, y + 10);
+        doc.setFontSize(14);
+        doc.text(value, x + 5, y + 22);
+        doc.setTextColor(0, 0, 0);
+    }
+
+    drawCard(14, 20, 60, 30, [41, 128, 185], "Total Economizado", formatCurrency(totalSaved));
+    drawCard(80, 20, 60, 30, [39, 174, 96], "Progresso", `${Math.round(progressPercentage)}%`);
+    drawCard(146, 20, 50, 30, [142, 68, 173], "Média Mensal", formatCurrency(avgMonthly));
+
+    // GERAR GRÁFICO Chart.js
+    const ctx = document.getElementById("progressChart").getContext("2d");
+    if (window.myChart) window.myChart.destroy(); // reset se já existir
+
+    window.myChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: ["Economizado", "Restante"],
+            datasets: [{
+                data: [totalSaved, goalData.totalGoal - totalSaved],
+                backgroundColor: ["#2980b9", "#ecf0f1"]
+            }]
+        },
+        options: { responsive: false, plugins: { legend: { display: false } } }
+    });
+
+    // Esperar renderizar e exportar como imagem
+    setTimeout(() => {
+        const imgData = ctx.canvas.toDataURL("image/png");
+        doc.addImage(imgData, "PNG", 60, 65, 90, 90);
+
+        // CRONOGRAMA
+        doc.setFontSize(16);
+        doc.text("Cronograma Detalhado", 14, 165);
+        doc.line(14, 167, 196, 167);
+
+        const cronograma = goalData.monthlyAmounts.map((amount, index) => {
+            const mes = index + 1;
+            const data = new Date(startDate.getFullYear(), startDate.getMonth() + index);
+            return [
+                mes,
+                data.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
+                formatCurrency(amount),
+                completedMonths.includes(index) ? "Concluído" : "Pendente"
+            ];
+        });
+
+        if (typeof doc.autoTable === "function") {
+            doc.autoTable({
+                startY: 175,
+                head: [["Mês", "Data", "Valor", "Status"]],
+                body: cronograma,
+                styles: { fontSize: 11 },
+                headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+                alternateRowStyles: { fillColor: [245, 245, 245] }
+            });
         }
+
+        // INSIGHTS
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.text("Insights e Recomendações", 14, 20);
+        let y = 35;
+        const insights = [
+            progressPercentage < 50 ? "Você está no caminho certo, continue consistente." : "Excelente progresso! Você já passou da metade da meta.",
+            "Compartilhe seu progresso para se manter motivado.",
+            "Celebre cada conquista, por menor que pareça."
+        ];
+        insights.forEach(txt => { doc.text(`- ${txt}`, 14, y); y += 10; });
+
+        // SALVAR
+        const fileName = `economia_progressiva_${goalData.name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+        doc.save(fileName);
+        showNotification("📑 Relatório PDF exportado com sucesso!", "success");
+    }, 600); // tempo para Chart.js renderizar
+}
+
+
 
         function quickAddSaving() {
             if (currentMonthIndex < goalData.monthlyAmounts.length && !completedMonths.includes(currentMonthIndex)) {
